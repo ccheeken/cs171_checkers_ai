@@ -4,6 +4,7 @@ from BoardClasses import Move
 from BoardClasses import Board
 from math import sqrt
 from math import log
+from copy import deepcopy
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 
@@ -40,13 +41,14 @@ class StudentAI():
 
         self.mcts_tree_head = Node()  # type Node
 
-    def get_move(self,move):
-        
-        '''
+    def get_move(self, move):
+        # returns a Move
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
         else:
             self.color = 1
+
+        '''
         moves = self.board.get_all_possible_moves(self.color)
         index = randint(0,len(moves)-1)
         inner_index =  randint(0,len(moves[index])-1)
@@ -94,7 +96,7 @@ class StudentAI():
         '''
         returns -1 (tie), 1 (black won), 2 (white won)
         '''
-        board = self.board #FIXME------shallow-copy,-not-deep-copy-----------------------------
+        board = deepcopy(self.board)
         player = self.color
         # play random moves until game ends
         while True:
@@ -122,7 +124,7 @@ class StudentAI():
             node.visits += 1
             if (won):
                 node.wins += 1
-            node = node.parrent
+            node = node.parent
 
     def mcts(self):
         '''
