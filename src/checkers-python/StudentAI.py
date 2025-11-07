@@ -10,7 +10,7 @@ from pickle import dump
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 
-MCTS_num = 1000 # repitions of MCTS per turn
+MCTS_num = 1000 # repitions of MCTS per turn (>500)
 C = 1.414 # exploration factor for UCT (sqrt(2))
 
 class Node():
@@ -88,6 +88,7 @@ class StudentAI():
         else:
             self.color = 1
 
+        #TODO: don't run mcts if there's only 1 move
         # run mcts simulations for current move
         for _ in range(MCTS_num):
             self.mcts()
@@ -110,7 +111,7 @@ class StudentAI():
             for child in curr_node.children:
                 curr_uct = child.calc_uct()
                 if (curr_uct == -1): # nodes that haven't fully been expaned
-                    return child
+                    return curr_node
                 if (curr_uct > highest_uct):
                     highest_uct = curr_uct
                     res = child
@@ -129,9 +130,10 @@ class StudentAI():
         # the algorithm expands the tree by adding one or more child nodes
         # representing possible actions from that state.
 
-        # list of Move objects
-        moves = self.board.get_all_possible_moves(self.color)
-        node.set_children(moves)
+        if (node.children == []):
+            # list of Move objects
+            moves = self.board.get_all_possible_moves(self.color)
+            node.set_children(moves)
         # random.choice() to select random (unexpanded) node to expand
         return choice(node.children)
 
@@ -187,7 +189,7 @@ class StudentAI():
         sim_res = self.simulation()
 
         if sim_res == -1:
-            won = True # consider ties as wins
+            won = False # consider ties as loss -- let's asian parent this AI
         elif sim_res == self.color: 
             won = True
         else:
