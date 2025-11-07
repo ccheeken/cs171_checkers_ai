@@ -1,23 +1,35 @@
-from random import randint
+# from random import randint
 from random import choice
 from BoardClasses import Move
 from BoardClasses import Board
 from math import sqrt
 from math import log
 from copy import deepcopy
+from pickle import load
+from pickle import dump
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 
 MCTS_num = 1000 # repitions of MCTS per turn
-C = 1.414 # exploration factor for UCT (sqrt(2))
+C = 2 # exploration factor for UCT (sqrt(2))
 
 class Node():
-    def __init__(self, parent=None, move=None):
+    def __init__(self, parent=None, move=None,
+                 wins=0, visits=0):
         self.move = move # Move leading to this node
-        self.wins = 0
-        self.visits = 0
-        self.parent = parent # type is Node
-        self.children = []   # list of Nodes
+        self.wins = wins
+        self.visits = visits
+        self.parent = parent    # type is Node
+        self.children = []      # list of Nodes
+    
+    # def __str__(self) -> str:
+    #     children = '['
+    #     for child in self.children:
+    #         children += child.__str__()
+    #     children += ']'
+    #     res = "Node(" + "PARENT" + ", " + str(self.move) + ", " + \
+    #                 str(self.wins) + ", " + str(self.visits) + ", " + children + ")\n"
+    #     return res
     
     def calc_uct(self) -> float:
         if (self.parent == None or self.visits == 0 or self.parent.visits == 0):
@@ -31,12 +43,14 @@ class Node():
     
     def highest_child(self):
         highest_uct = 0
-        #res = None
+        res = None
         for child in self.children:
             curr_uct = child.calc_uct()
             if (curr_uct >= highest_uct):
                 highest_uct = curr_uct
                 res = child
+        if (res == None):
+            RuntimeError("No moves possible.")
         return res
 
 class StudentAI():
@@ -53,18 +67,30 @@ class StudentAI():
 
         self.mcts_tree_head = Node()  # type Node
 
+    def update_head_node(self, move) -> None:
+        found = False
+        for child in self.mcts_tree_head.children:
+            if (child.move == move):
+                self.mcts_tree_head = child
+                found = True
+                break
+        if (not found):
+            self.mcts_tree_head = Node()
+
     def get_move(self, move):
         # returns a Move
         if len(move) != 0:
             self.board.make_move(move,self.opponent[self.color])
+            self.update_head_node(move) # update mcts tree
         else:
             self.color = 1
+
         # run mcts simulations for current move
-        self.mcts_tree_head = Node()
         for _ in range(MCTS_num):
             self.mcts()
-        move = self.mcts_tree_head.highest_child().move # type error ----------------
-        self.board.make_move(move,self.color)
+        self.mcts_tree_head = self.mcts_tree_head.highest_child()
+        move = self.mcts_tree_head.move # RuntimeError if no moves are possible
+        self.board.make_move(move,self.color) # update board
         return move
 
     # ---------------------------------------------------------
@@ -114,6 +140,10 @@ class StudentAI():
         while True:
             # check if game ends + who won, returns is_win
             res = board.is_win(player)
+                # -1 == tie
+                #  0 == no winner yet
+                #  1 == black won
+                #  2 == white won
             if res != 0:
                 return res
 
@@ -144,16 +174,11 @@ class StudentAI():
         plays out one round of mcts
         '''
         selected_node = self.selection()
-        self.board.is_win(self.color)
-            # -1 == tie
-            #  0 == no winner yet
-            #  1 == black won
-            #  2 == white won
         expanded_node = self.expansion(selected_node) # enter non-terminal node
         sim_res = self.simulation()
 
         if sim_res == -1:
-            won = False # consider ties as losses
+            won = True # consider ties as wins
         elif sim_res == self.color: 
             won = True
         else:
@@ -162,4 +187,15 @@ class StudentAI():
 
 
 if __name__ == "__main__":
-    pass
+    col = 7
+    row = 7
+    p = 2   # num of rows filled with checkers at the start
+
+    # s = StudentAI(col, row, p)
+    # head = s.mcts_tree_head
+    # for i in range(10000):
+    #     s.mcts()
+    # import sys
+    # sys.setrecursionlimit(999999999)
+    # with open("mcts_data.pkl", 'wb') as file:
+    #     dump(head, file)
