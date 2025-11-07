@@ -5,13 +5,13 @@ from BoardClasses import Board
 from math import sqrt
 from math import log
 from copy import deepcopy
-from pickle import load
+from pickle import load # save/load mcts simulation objects
 from pickle import dump
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 
 MCTS_num = 1000 # repitions of MCTS per turn
-C = 2 # exploration factor for UCT (sqrt(2))
+C = 1.414 # exploration factor for UCT (sqrt(2))
 
 class Node():
     def __init__(self, parent=None, move=None,
@@ -32,7 +32,10 @@ class Node():
     #     return res
     
     def calc_uct(self) -> float:
-        if (self.parent == None or self.visits == 0 or self.parent.visits == 0):
+        if (self.visits == 0): # not fully expanded nodes
+            return -1
+        if (self.parent == None): # root node
+            # (self.parent == None or self.parent.visits == 0)
             return 0
         return (self.wins / self.visits) + (C * sqrt(log(self.parent.visits)/self.visits))
     
@@ -106,6 +109,8 @@ class StudentAI():
             res = curr_node.children[0]
             for child in curr_node.children:
                 curr_uct = child.calc_uct()
+                if (curr_uct == -1): # nodes that haven't fully been expaned
+                    return child
                 if (curr_uct > highest_uct):
                     highest_uct = curr_uct
                     res = child
@@ -168,6 +173,10 @@ class StudentAI():
             if (won):
                 node.wins += 1
             node = node.parent
+        # update parent node
+        node.visits += 1
+        if (won):
+                node.wins += 1
 
     def mcts(self):
         '''
@@ -193,6 +202,7 @@ if __name__ == "__main__":
 
     # s = StudentAI(col, row, p)
     # head = s.mcts_tree_head
+    ## s.mcts()
     # for i in range(10000):
     #     s.mcts()
     # import sys
