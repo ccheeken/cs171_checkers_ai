@@ -8,24 +8,36 @@ from copy import deepcopy
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 
-C = 1 # exploration factor for UCT
+MCTS_num = 1000 # repitions of MCTS per turn
+C = 1.414 # exploration factor for UCT (sqrt(2))
 
 class Node():
     def __init__(self, parent=None, move=None):
-        self.move = None # Move leading to this node
+        self.move = move # Move leading to this node
         self.wins = 0
         self.visits = 0
         self.parent = parent # type is Node
         self.children = []   # list of Nodes
     
     def calc_uct(self) -> float:
-        if (self.parent == None):
+        if (self.parent == None or self.visits == 0 or self.parent.visits == 0):
             return 0
         return (self.wins / self.visits) + (C * sqrt(log(self.parent.visits)/self.visits))
     
-    def set_children(self, moves: list[Move]) -> None:
-        for move in moves:
-            self.children.append(Node(self, move))
+    def set_children(self, moves: list[list[Move]]) -> None:
+        for row in moves:
+            for col in row:
+                self.children.append(Node(self, col))
+    
+    def highest_child(self):
+        highest_uct = 0
+        #res = None
+        for child in self.children:
+            curr_uct = child.calc_uct()
+            if (curr_uct >= highest_uct):
+                highest_uct = curr_uct
+                res = child
+        return res
 
 class StudentAI():
 
@@ -47,15 +59,14 @@ class StudentAI():
             self.board.make_move(move,self.opponent[self.color])
         else:
             self.color = 1
-
-        '''
-        moves = self.board.get_all_possible_moves(self.color)
-        index = randint(0,len(moves)-1)
-        inner_index =  randint(0,len(moves[index])-1)
-        move = moves[index][inner_index]
+        # run mcts simulations for current move
+        self.mcts_tree_head = Node()
+        for _ in range(MCTS_num):
+            self.mcts()
+        move = self.mcts_tree_head.highest_child().move # type error ----------------
         self.board.make_move(move,self.color)
         return move
-        '''
+
     # ---------------------------------------------------------
 
     def selection(self) -> Node:
@@ -63,6 +74,7 @@ class StudentAI():
         returns the Node with the highest UCT value
         '''
         curr_node = self.mcts_tree_head
+        res = curr_node
         while (curr_node.children != []):
             highest_uct = 0
             res = curr_node.children[0]
@@ -107,9 +119,10 @@ class StudentAI():
 
             # pick random move
             moves = board.get_all_possible_moves(player)
-            move = choice(moves)
-            # makes move 
-            board.make_move(move,player)
+            if (moves == []):
+                return res
+            move = choice(choice(moves))
+            board.make_move(move, player)
 
             # switch players
             player = 1 if player == 2 else 2
@@ -138,7 +151,14 @@ class StudentAI():
             #  2 == white won
         expanded_node = self.expansion(selected_node) # enter non-terminal node
         sim_res = self.simulation()
-        self.backpropagation(expanded_node, sim_res)
+
+        if sim_res == -1:
+            won = False # consider ties as losses
+        elif sim_res == self.color: 
+            won = True
+        else:
+            won = False
+        self.backpropagation(expanded_node, won)
 
 
 if __name__ == "__main__":
