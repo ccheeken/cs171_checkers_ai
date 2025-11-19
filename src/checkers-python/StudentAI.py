@@ -135,7 +135,7 @@ class StudentAI():
             moves = self.board.get_all_possible_moves(self.color)
             node.set_children(moves)
         # random.choice() to select random (unexpanded) node to expand
-        return choice(node.children)
+        return choice(node.children) #FIXME
 
     def simulation(self) -> int:
         '''
