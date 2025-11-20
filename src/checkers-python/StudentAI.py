@@ -11,7 +11,7 @@ from pickle import dump
 #Students can modify anything except the class name and exisiting functions and varibles.
 
 MCTS_num = 1000 # repitions of MCTS per turn (>500)
-C = 1.414 # exploration factor for UCT (sqrt(2))
+C = sqrt(2) # exploration factor for UCT (sqrt(2))
 
 class Node():
     def __init__(self, parent=None, move=None,
@@ -20,16 +20,8 @@ class Node():
         self.wins = wins
         self.visits = visits
         self.parent = parent    # type is Node
+        self.unvisited_children = []
         self.children = []      # list of Nodes
-    
-    # def __str__(self) -> str:
-    #     children = '['
-    #     for child in self.children:
-    #         children += child.__str__()
-    #     children += ']'
-    #     res = "Node(" + "PARENT" + ", " + str(self.move) + ", " + \
-    #                 str(self.wins) + ", " + str(self.visits) + ", " + children + ")\n"
-    #     return res
     
     def calc_uct(self) -> float:
         if (self.visits == 0): # not fully expanded nodes
@@ -42,12 +34,12 @@ class Node():
     def set_children(self, moves: list[list[Move]]) -> None:
         for row in moves:
             for col in row:
-                self.children.append(Node(self, col))
+                self.unvisited_children.append(Node(self, col))
     
     def highest_child(self):
         highest_uct = 0
         res = None
-        for child in self.children:
+        for child in self.children + self.unvisited_children:
             curr_uct = child.calc_uct()
             if (curr_uct >= highest_uct):
                 highest_uct = curr_uct
@@ -72,7 +64,7 @@ class StudentAI():
 
     def update_head_node(self, move) -> None:
         found = False
-        for child in self.mcts_tree_head.children:
+        for child in self.mcts_tree_head.children + self.mcts_tree_head.unvisited_children:
             if (child.move == move):
                 self.mcts_tree_head = child
                 found = True
@@ -105,13 +97,13 @@ class StudentAI():
         '''
         curr_node = self.mcts_tree_head
         res = curr_node
-        while (curr_node.children != []):
+        while (curr_node.unvisited_children == [] and curr_node.children != []):
             highest_uct = 0
             res = curr_node.children[0]
             for child in curr_node.children:
                 curr_uct = child.calc_uct()
-                if (curr_uct == -1): # nodes that haven't fully been expaned
-                    return curr_node
+                # if (curr_uct == -1): # nodes that haven't fully been expaned
+                #     return curr_node
                 if (curr_uct > highest_uct):
                     highest_uct = curr_uct
                     res = child
@@ -130,12 +122,17 @@ class StudentAI():
         # the algorithm expands the tree by adding one or more child nodes
         # representing possible actions from that state.
 
-        if (node.children == []):
+        if (node.unvisited_children == []):
             # list of Move objects
             moves = self.board.get_all_possible_moves(self.color)
             node.set_children(moves)
         # random.choice() to select random (unexpanded) node to expand
-        return choice(node.children) #FIXME
+        res = choice(node.unvisited_children)
+        node.unvisited_children.remove(res)
+        node.children.append(res)
+        return res
+
+
 
     def simulation(self) -> int:
         '''
