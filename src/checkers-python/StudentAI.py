@@ -16,7 +16,7 @@ C = sqrt(2) # exploration factor for UCT (sqrt(2))
 class Node():
     def __init__(self, color, parent=None, move=None,
                  wins=0, visits=0):
-        self.move = move # Move leading to this node
+        self.move = move # Move to take
         self.color = color # 1==B , 2==W -- color of self.move^
         self.wins = wins
         self.visits = visits
@@ -73,7 +73,6 @@ class StudentAI():
                 found = True
                 break
         if (not found):
-            # print("FAAHHHHHH\n")
             self.mcts_tree_head = Node(self.opponent[self.color]) # opponent's color cuz the children of this are gonna be UR moves
 
     def get_move(self, move):
@@ -122,7 +121,7 @@ class StudentAI():
             self.board_copy.make_move(curr_node.move, curr_node.color) # update board_copy
         return curr_node
 
-    def expansion(self, node: Node) -> Node: # CHECK THIS -------------------------------
+    def expansion(self, node: Node) -> Node:
         '''
         node: Node from selection phase
         returns the node that was expanded
@@ -229,17 +228,17 @@ class StudentAI():
         self.backpropagation(terminal_node, won)
 
 
-if __name__ == "__main__":
-    col = 7
-    row = 7
-    p = 2   # num of rows filled with checkers at the start
+# if __name__ == "__main__":
+#     col = 7
+#     row = 7
+#     p = 2   # num of rows filled with checkers at the start
 
-    # s = StudentAI(col, row, p)
-    # head = s.mcts_tree_head
-    ## s.mcts()
-    # for i in range(10000):
-    #     s.mcts()
-    # import sys
-    # sys.setrecursionlimit(999999999)
-    # with open("mcts_data.pkl", 'wb') as file:
-    #     dump(head, file)
+#     s = StudentAI(col, row, p)
+#     head = s.mcts_tree_head
+#     # s.mcts()
+#     for i in range(10000):
+#         s.mcts()
+#     import sys
+#     sys.setrecursionlimit(999999999)
+#     with open("mcts_data.pkl", 'wb') as file:
+#         dump(head, file)

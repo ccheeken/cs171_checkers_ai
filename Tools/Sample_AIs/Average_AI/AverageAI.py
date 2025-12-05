@@ -52,9 +52,9 @@ class StudentAI():
 
     def alphaBeta(self, c_board, depth, color):
         alpha, beta = -10000000000, 10000000000
-        if c_board.is_win() == self.color:
+        if c_board.is_win(color) == self.color:
             return 1000000000000000
-        elif c_board.is_win() == self.oppoent[self.color]:
+        elif c_board.is_win(color) == self.oppoent[self.color]:
             return -1000000000000000
         else:
             moves = c_board.get_all_possible_moves(color)
@@ -71,7 +71,7 @@ class StudentAI():
             return alpha
 
     def MinValue(self, depth, alpha, beta, c_board, color):
-        win_num = c_board.is_win()
+        win_num = c_board.is_win(color)
         if win_num == self.color:
             return 1000000000000000
         elif win_num == self.oppoent[color]:
@@ -94,7 +94,7 @@ class StudentAI():
                 return beta
 
     def MaxValue(self, depth, alpha, beta, c_board, color):
-        win_num = c_board.is_win()
+        win_num = c_board.is_win(color)
         if win_num == self.color:
             return 100000000000000000
         elif win_num == self.oppoent[color]:
